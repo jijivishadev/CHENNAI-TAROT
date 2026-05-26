@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Million Dollars Coach">
+  <defs>
+    <clipPath id="faviconClip">
+      <rect width="64" height="64" rx="12" />
+    </clipPath>
+  </defs>
+  <image href="/milliondollarscoach_logo.jpeg" width="64" height="64" preserveAspectRatio="xMidYMid slice" clip-path="url(#faviconClip)" />
+</svg>

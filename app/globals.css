@@ -1,0 +1,261 @@
+/* Editorial mark for high-end highlights */
+.editorial-mark {
+  display: inline-block;
+  background: rgba(212, 175, 55, 0.15);
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+  padding-top: 0.1em;
+  padding-bottom: 0.1em;
+  border-radius: 0.25em;
+}
+/* EditorialHighlight utility styles */
+.editorial-highlight {
+  background: linear-gradient(90deg, rgba(212,175,55,0.15) 100%, transparent 0%);
+  background-size: 0% 100%;
+  background-repeat: no-repeat;
+  background-position: left center;
+  transition: background-size 0.7s cubic-bezier(.77,0,.18,1);
+  display: inline-block;
+  border-radius: 0.25em;
+  box-decoration-break: clone;
+  padding: 0.1em 0.3em 0.15em 0.3em;
+  transform: skewX(-8deg);
+}
+.editorial-highlight.draw-in {
+  background-size: 100% 100%;
+}
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --floating-right: 2rem;
+  --floating-bottom: 2rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #4B2E83;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), sans-serif;
+}
+
+/* Global text selection color */
+::selection {
+  background: #D4AF37;
+  color: #fff;
+}
+
+::-moz-selection {
+  background: #D4AF37;
+  color: #fff;
+}
+
+/* Keep Zoho chat anchored under the custom floating stack. */
+#zsiq_float,
+#zsiq_agtpic,
+.zsiq_float,
+.zsiq-new,
+.zls-sptwndw {
+  right: 2rem !important;
+  bottom: 2rem !important;
+  z-index: 9998 !important;
+}
+
+@media (max-width: 640px) {
+  :root {
+    --floating-right: 1rem;
+    --floating-bottom: calc(env(safe-area-inset-bottom) + 1rem);
+  }
+
+  #zsiq_float,
+  #zsiq_agtpic,
+  .zsiq_float,
+  .zsiq-new,
+  .zls-sptwndw {
+    right: var(--floating-right) !important;
+    bottom: var(--floating-bottom) !important;
+  }
+}
+
+/* Match Zoho bubble color with custom floating buttons. */
+#zsiq_agtpic,
+#zsiq_float .zsiqfanim,
+#zsiq_float .zsiqfanim > * {
+  background: #D4AF37 !important;
+  border-radius: 9999px !important;
+}
+
+#zsiq_float,
+.zsiq_float,
+#zsiq_agtpic,
+#zsiq_float .zsiqfanim {
+  margin: 0 !important;
+  transform: none !important;
+}
+
+#zsiq_agtpic,
+#zsiq_float .zsiqfanim {
+  width: 3rem !important;
+  height: 3rem !important;
+  min-width: 3rem !important;
+  min-height: 3rem !important;
+}
+
+@media (min-width: 640px) {
+  #zsiq_agtpic,
+  #zsiq_float .zsiqfanim {
+    width: 3.5rem !important;
+    height: 3.5rem !important;
+    min-width: 3.5rem !important;
+    min-height: 3.5rem !important;
+  }
+}
+
+#zsiq_agtpic:hover,
+#zsiq_float .zsiqfanim:hover,
+#zsiq_float .zsiqfanim:hover > * {
+  background: #4B2E83 !important;
+}
+
+
+@layer base {
+  html {
+    font-display: swap;
+  }
+}
+
+/* Reduce layout shift */
+img, video, iframe {
+  content-visibility: auto;
+  contain: content;
+}
+
+/* Optimize animations for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Lazy load below-fold content */
+.content-below-fold {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 5000px;
+}
+
+/* Improve scrolling performance */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Prevent CLS from images */
+img {
+  aspect-ratio: attr(width) / attr(height);
+}
+
+/* Optimize rendering */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Critical CSS for above-the-fold content */
+.hero-section {
+  contain: layout style paint;
+}
+
+/* Blog content styling */
+/* Blog content styling – only spacing, no color/font overrides */
+.blog-content {
+  max-width: 100%;
+  margin-top: 2rem;
+}
+
+.blog-content p {
+  margin-bottom: 1.25rem;
+  line-height: 1.75;
+}
+
+.blog-content h1, .blog-content h2, .blog-content h3 {
+  font-weight: bold;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.blog-content h1 { font-size: 2rem; }
+.blog-content h2 { font-size: 1.6rem; }
+.blog-content h3 { font-size: 1.3rem; }
+
+.blog-content ul, .blog-content ol {
+  margin: 1rem 0;
+  padding-left: 1.5rem;
+}
+
+.blog-content li {
+  margin: 0.25rem 0;
+}
+
+/* Blog content – only spacing, never override inline styles */
+.blog-content {
+  max-width: 100%;
+}
+
+.blog-content p {
+  margin-bottom: 1rem;
+  line-height: 1.7;
+}
+
+.blog-content h1, .blog-content h2, .blog-content h3 {
+  font-weight: bold;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+.blog-content h1 { font-size: 2rem; }
+.blog-content h2 { font-size: 1.6rem; }
+.blog-content h3 { font-size: 1.3rem; }
+
+.blog-content ul, .blog-content ol {
+  margin: 1rem 0;
+  padding-left: 1.5rem;
+}
+.blog-content li {
+  margin: 0.25rem 0;
+}
+
+/* Ensure inline styles (color, font-size) from editor are not overridden */
+.blog-content span[style*="color"],
+.blog-content span[style*="font-size"]
+
+
+/* Allow inline styles to take precedence */
+.prose {
+  color: #1a1a1a; /* base fallback */
+}
+
+.prose span,
+.prose p {
+  /* Do NOT force color or font-size with !important */
+  color: inherit;
+  font-size: inherit;
+}
+
+/* Ensure color picker output is visible */
+.prose [style*="color"] {
+  display: inline;
+}
