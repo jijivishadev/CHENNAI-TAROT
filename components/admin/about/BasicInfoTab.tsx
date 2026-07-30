@@ -30,20 +30,32 @@ export default function BasicInfoTab() {
       expertise: Array(12).fill("") as string[],
       originDescription: "",
     };
-    getAboutPageContent(fallback).then((data) => {
-      setForm({
-        title: data.title || "",
-        subtitle: data.subtitle || "",
-        description: data.description || "",
-        imageUrl: data.imageUrl || "",
-        expertise: Array.isArray(data.expertise)
-          ? data.expertise.filter((item): item is string => typeof item === "string" && item.trim().length > 0)
-          : [],
-        originDescription: data.originDescription || "",
+    getAboutPageContent(fallback)
+      .then((data) => {
+        setForm({
+          title: data.title || "",
+          subtitle: data.subtitle || "",
+          description: data.description || "",
+          imageUrl: data.imageUrl || "",
+          expertise: Array.isArray(data.expertise)
+            ? data.expertise.filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+            : [],
+          originDescription: data.originDescription || "",
+        });
+      })
+      .catch(() => {
+        setForm({
+          title: "",
+          subtitle: "",
+          description: "",
+          imageUrl: "",
+          expertise: [],
+          originDescription: "",
+        });
+      })
+      .finally(() => {
+        setLoading(false);
       });
-      setLoading(false);
-    });
-    // eslint-disable-next-line
   }, []);
 
   const handleSave = async (e: React.FormEvent) => {

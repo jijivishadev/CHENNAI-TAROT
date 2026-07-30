@@ -30,13 +30,21 @@ export default function ContactHub() {
   const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!db) {
+      setError("Firebase is not configured in this environment.");
+      setLoading(false);
+      return;
+    }
+
     fetchData();
   }, []);
 
   const fetchData = async () => {
     setLoading(true);
+    setError(null);
     try {
       const contactSnap = await getDocs(collection(db, "contact_info"));
       if (!contactSnap.empty) {
@@ -48,6 +56,7 @@ export default function ContactHub() {
       setSocialPlatforms(platforms);
     } catch (error) {
       console.error("Error fetching contact data:", error);
+      setError("Failed to load contact data. Please check permissions or connectivity.");
     } finally {
       setLoading(false);
     }
@@ -118,6 +127,18 @@ export default function ContactHub() {
 
   return (
     <div className="w-full bg-[#FDFBFF] min-h-screen p-4 md:p-10 text-[#1A0B2E]">
+      {loading ? (
+        <div className="mb-6 rounded-2xl border border-[#1A0B2E]/10 bg-white p-8 text-center text-[#1A0B2E]/70">
+          Loading contact hub...
+        </div>
+      ) : null}
+
+      {error ? (
+        <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      ) : null}
+
       <div className="mb-12">
         <h1 className={`${playfair.className} text-4xl md:text-5xl flex items-center gap-4`}>
           Contact <span className="italic text-[#D4AF37]">Hub</span>

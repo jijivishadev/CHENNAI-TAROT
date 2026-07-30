@@ -54,10 +54,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const isLoginRoute = pathname === "/admin/login" || pathname?.startsWith("/admin/login/");
+  const hasFirebaseAuth = Boolean(auth);
 
   // Auth check using Firebase onAuthStateChanged
   useEffect(() => {
     setMounted(true);
+
+    if (!hasFirebaseAuth) {
+      setIsAuthed(false);
+      setIsLoading(false);
+      return;
+    }
 
     // Firebase user is the source of truth; localStorage is only a mirrored hint.
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -72,7 +79,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [hasFirebaseAuth]);
 
   // Redirect unauthenticated users
   useEffect(() => {
@@ -91,6 +98,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   // Show loading state
   if (isLoginRoute) {
     return <main>{children}</main>;
+  }
+
+  if (!hasFirebaseAuth) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#F8F9FA] px-6 text-center text-[#1A0B2E]">
+        <div className="max-w-lg rounded-2xl border border-[#D4AF37]/30 bg-white p-8 shadow-sm">
+          <h1 className="text-2xl font-bold text-[#4B2E83]">Admin unavailable</h1>
+          <p className="mt-3 text-sm text-[#1A0B2E]/70">
+            Firebase Auth is not configured in this environment, so the admin panel cannot initialize safely.
+          </p>
+        </div>
+      </main>
+    );
   }
 
   // Show loading state

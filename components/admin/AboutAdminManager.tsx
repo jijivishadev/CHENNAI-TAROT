@@ -9,6 +9,7 @@ const TABS = [
 
 export default function AboutAdminManager() {
   const [tab, setTab] = useState(0);
+  const ActiveTab = TABS[tab].component;
 
   return (
     <div className="min-h-screen bg-[#FDFBFF] p-0 sm:p-8">
@@ -25,7 +26,7 @@ export default function AboutAdminManager() {
           ))}
         </div>
         <div>
-          {TABS[tab].component && (TABS[tab].component())}
+          <ActiveTab />
         </div>
       </div>
     </div>

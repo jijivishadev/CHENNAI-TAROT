@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { Link as LinkIcon, Save, UploadCloud, X } from "lucide-react";
 import { getPromotionalEvent, updatePromotionalEvent, uploadStorageFile } from "@/lib/firebaseServices";
 import type { PromotionalEvent } from "@/types";
+import { db, storage } from "@/lib/firebase";
 
 type EventFormState = {
   bannerImageUrl: string;
@@ -31,6 +32,12 @@ export default function EventsManager() {
   });
 
   useEffect(() => {
+    if (!db) {
+      setError("Firebase is not configured in this environment.");
+      setLoading(false);
+      return;
+    }
+
     const loadEvent = async () => {
       try {
         const record = await getPromotionalEvent();
@@ -110,6 +117,11 @@ export default function EventsManager() {
     setError(null);
     setMessage("");
 
+    if (!db) {
+      setError("Firebase Firestore is unavailable.");
+      return;
+    }
+
     const redirectLink = formState.redirectLink.trim();
     if (!redirectLink) {
       setError("A redirection link is required.");
@@ -119,6 +131,11 @@ export default function EventsManager() {
     let bannerImageUrl = formState.bannerImageUrl.trim();
 
     if (selectedFile) {
+      if (!storage) {
+        setError("Firebase Storage is unavailable.");
+        return;
+      }
+
       try {
         bannerImageUrl = await uploadStorageFile(EVENT_STORAGE_PATH, selectedFile);
       } catch (uploadError) {

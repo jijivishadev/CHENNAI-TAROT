@@ -19,9 +19,13 @@ export default function AdminLoginPage() {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [debugInfo, setDebugInfo] = useState("");
+  const hasFirebaseAuth = Boolean(auth);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (!hasFirebaseAuth) {
+      setError("Firebase Auth is not available in this environment.");
+      return;
+    }
 
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -31,13 +35,19 @@ export default function AdminLoginPage() {
     });
 
     return () => unsubscribe();
-  }, [router]);
+  }, [hasFirebaseAuth, router]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
     setDebugInfo("");
     setIsSubmitting(true);
+
+    if (!hasFirebaseAuth) {
+      setError("Firebase Auth is not available. Check your environment variables.");
+      setIsSubmitting(false);
+      return;
+    }
 
     if (!email.trim()) {
       setError("Please enter your email address.");
@@ -172,7 +182,7 @@ export default function AdminLoginPage() {
 
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !hasFirebaseAuth}
               className="inline-flex min-h-14 w-full items-center justify-center rounded-none border border-[#D4AF37] bg-[#D4AF37] px-6 py-3 text-base font-bold uppercase tracking-[0.08em] text-[#1A0B2E] transition-colors duration-200 hover:bg-transparent hover:text-[#D4AF37] disabled:cursor-not-allowed disabled:opacity-70"
             >
               {isSubmitting ? (
@@ -192,6 +202,12 @@ export default function AdminLoginPage() {
           <div className="mt-4 text-center text-xs text-[#F3ECFF]/40">
             <p>Try: mohit@gmail.com, dev@gmail.com, or multi@milliondollarscoach.com</p>
           </div>
+
+          {!hasFirebaseAuth ? (
+            <p className="mt-3 text-center text-xs text-red-300">
+              Firebase Auth is unavailable. Admin sign-in is disabled.
+            </p>
+          ) : null}
         </section>
       </div>
     </main>

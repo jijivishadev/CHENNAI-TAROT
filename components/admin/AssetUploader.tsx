@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { UploadCloud, Image as ImageIcon, FileCheck, AlertTriangle, Link as LinkIcon, MoreVertical, Trash2, SquarePen, Save } from "lucide-react";
 import { deleteSiteAssetUrl, getSiteAssets, saveSiteAssetUrl, uploadSiteAssetFile } from "@/lib/firebaseServices";
+import { db } from "@/lib/firebase";
 
 type AssetUploaderProps = {
   title: string;
@@ -49,6 +50,11 @@ const AssetUploader: React.FC<AssetUploaderProps> = ({ title, description, fires
   }, []);
 
   useEffect(() => {
+    if (!db) {
+      setError("Firebase Storage/Firestore is not available in this environment.");
+      return;
+    }
+
     const fetchCurrentUrl = async () => {
       const assets = await getSiteAssets();
       const assetValue = assets[firestoreField as keyof typeof assets];
@@ -119,6 +125,11 @@ const AssetUploader: React.FC<AssetUploaderProps> = ({ title, description, fires
   };
 
   const handleUpload = async (): Promise<void> => {
+    if (!db) {
+      setError("Firebase Storage is unavailable.");
+      return;
+    }
+
     if (!file) {
       setError("Please select a file to upload.");
       return;
@@ -149,6 +160,11 @@ const AssetUploader: React.FC<AssetUploaderProps> = ({ title, description, fires
   };
 
   const handleSaveExternalUrl = async (): Promise<void> => {
+    if (!db) {
+      setError("Firebase Firestore is unavailable.");
+      return;
+    }
+
     const normalizedUrl = urlInput.trim();
 
     if (!normalizedUrl) {
@@ -181,6 +197,11 @@ const AssetUploader: React.FC<AssetUploaderProps> = ({ title, description, fires
   };
 
   const handleDeleteAsset = async (): Promise<void> => {
+    if (!db) {
+      setError("Firebase Firestore is unavailable.");
+      return;
+    }
+
     setError(null);
 
     try {

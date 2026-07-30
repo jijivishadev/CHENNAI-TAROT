@@ -57,6 +57,26 @@ const getRecognitionsRef = () => (db ? doc(db, "pages", "about_recognitions") : 
 const getImageManagerRef = () => (db ? doc(db, "settings", "imageManager") : null);
 const getPromotionalEventRef = () => (db ? doc(db, "events", "promotional_event") : null);
 
+function createFirebaseUnavailableError(feature: string): Error {
+  return new Error(`Firebase ${feature} is not available. Check NEXT_PUBLIC_FIREBASE_* environment variables.`);
+}
+
+function requireFirestore(feature: string) {
+  if (!db) {
+    throw createFirebaseUnavailableError(feature);
+  }
+
+  return db;
+}
+
+function requireStorage() {
+  if (!storage) {
+    throw createFirebaseUnavailableError("Storage");
+  }
+
+  return storage;
+}
+
 // ============ COLLECTION REFERENCES ============
 const EARLY_LIFE_COLLECTION = "about_early_life";
 const CORE_BELIEFS_COLLECTION = "about_core_beliefs";
@@ -132,6 +152,8 @@ const DEFAULT_PATHWAYS_CONTENT: PathwaysContent = {
 
 export async function getCoachingPlans(): Promise<CoachingPlan[]> {
   try {
+    if (!db) return [];
+
     const response = await fetch("/api/offers", { cache: "no-store" });
     if (!response.ok) {
       throw new Error(`Offers API failed with status ${response.status}`);
@@ -161,6 +183,8 @@ export async function getCoachingPlans(): Promise<CoachingPlan[]> {
 }
 
 export async function updateCoachingPlan(id: string, data: Partial<Omit<CoachingPlan, "id">>) {
+  requireFirestore("Firestore write");
+
   try {
     const response = await fetch("/api/offers", {
       method: "PATCH",
@@ -180,6 +204,8 @@ export async function updateCoachingPlan(id: string, data: Partial<Omit<Coaching
 }
 
 export async function addCoachingPlan(plan: Omit<CoachingPlan, "id">) {
+  requireFirestore("Firestore write");
+
   return await addDoc(collection(db, OFFERS_COLLECTION), { ...plan, updatedAt: Date.now() });
 }
 
@@ -218,7 +244,7 @@ export async function getAnnouncementBarContent(): Promise<AnnouncementBarConten
 
 export async function updateAnnouncementBarContent(content: Partial<AnnouncementBarContent>) {
   const ref = getAnnouncementBarRef();
-  if (!ref) return;
+  if (!ref) throw createFirebaseUnavailableError("Firestore write");
 
   await setDoc(
     ref,
@@ -253,7 +279,7 @@ export async function getHomeMessageContent(): Promise<HomeMessageContent> {
 
 export async function updateHomeMessageContent(content: Partial<HomeMessageContent>) {
   const ref = getHomeMessageRef();
-  if (!ref) return;
+  if (!ref) throw createFirebaseUnavailableError("Firestore write");
 
   await setDoc(
     ref,
@@ -288,7 +314,7 @@ export async function getPromotionalEvent(): Promise<PromotionalEvent | null> {
 
 export async function updatePromotionalEvent(content: Partial<Omit<PromotionalEvent, "id">>) {
   const ref = getPromotionalEventRef();
-  if (!ref) return;
+  if (!ref) throw createFirebaseUnavailableError("Firestore write");
 
   await setDoc(
     ref,
@@ -313,7 +339,7 @@ export async function getSiteAssets(): Promise<SiteAssets> {
 
 export async function saveSiteAssetUrl(field: string, url: string) {
   const ref = getSiteAssetsRef();
-  if (!ref) return;
+  if (!ref) throw createFirebaseUnavailableError("Firestore write");
 
   await setDoc(
     ref,
@@ -327,7 +353,7 @@ export async function saveSiteAssetUrl(field: string, url: string) {
 
 export async function deleteSiteAssetUrl(field: string) {
   const ref = getSiteAssetsRef();
-  if (!ref) return;
+  if (!ref) throw createFirebaseUnavailableError("Firestore write");
 
   await setDoc(
     ref,
@@ -373,7 +399,7 @@ export async function getImageManagerSettings(): Promise<ImageManagerSettings> {
 
 export async function updateImageManagerSettings(content: Partial<ImageManagerSettings>) {
   const ref = getImageManagerRef();
-  if (!ref) return;
+  if (!ref) throw createFirebaseUnavailableError("Firestore write");
 
   await setDoc(
     ref,
@@ -386,6 +412,8 @@ export async function updateImageManagerSettings(content: Partial<ImageManagerSe
 }
 
 export async function uploadStorageFile(storagePath: string, file: File, onProgress?: (value: number) => void) {
+  requireStorage();
+
   const fullStoragePath = `${storagePath}/${Date.now()}_${file.name}`;
   const storageRef = ref(storage, fullStoragePath);
   const uploadTask = uploadBytesResumable(storageRef, file);
@@ -490,31 +518,41 @@ export async function getAboutPageContent(fallback: AboutPageContent): Promise<A
 
 export async function updateAboutPageContent(content: Partial<AboutPageContent>) {
   const ref = getAboutPageRef();
-  if (!ref) return;
+  if (!ref) throw createFirebaseUnavailableError("Firestore write");
 
   await setDoc(ref, { ...content, updatedAt: Date.now() }, { merge: true });
 }
 
 // ============ EARLY LIFE CARDS (NEW) ============
 export async function getEarlyLifeCards(): Promise<EarlyLifeCard[]> {
+  if (!db) return [];
+
   const q = query(collection(db, EARLY_LIFE_COLLECTION), orderBy("order", "asc"));
   const snapshot = await getDocs(q);
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as EarlyLifeCard));
 }
 
 export async function addEarlyLifeCard(card: Omit<EarlyLifeCard, "id">) {
+  requireFirestore("Firestore write");
+
   return await addDoc(collection(db, EARLY_LIFE_COLLECTION), card);
 }
 
 export async function updateEarlyLifeCard(id: string, data: Partial<Omit<EarlyLifeCard, "id" | "order">>) {
+  requireFirestore("Firestore write");
+
   await updateDoc(doc(db, EARLY_LIFE_COLLECTION, id), data);
 }
 
 export async function deleteEarlyLifeCard(id: string) {
+  requireFirestore("Firestore write");
+
   await deleteDoc(doc(db, EARLY_LIFE_COLLECTION, id));
 }
 
 export async function reorderEarlyLifeCards(updates: { id: string; order: number }[]) {
+  requireFirestore("Firestore write");
+
   const batch = writeBatch(db);
   updates.forEach(({ id, order }) => {
     batch.update(doc(db, EARLY_LIFE_COLLECTION, id), { order });
@@ -524,20 +562,28 @@ export async function reorderEarlyLifeCards(updates: { id: string; order: number
 
 // ============ CORE BELIEFS (NEW) ============
 export async function getCoreBeliefs(): Promise<CoreBelief[]> {
+  if (!db) return [];
+
   const q = query(collection(db, CORE_BELIEFS_COLLECTION), orderBy("order", "asc"));
   const snapshot = await getDocs(q);
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CoreBelief));
 }
 
 export async function addCoreBelief(belief: Omit<CoreBelief, "id">) {
+  requireFirestore("Firestore write");
+
   return await addDoc(collection(db, CORE_BELIEFS_COLLECTION), belief);
 }
 
 export async function updateCoreBelief(id: string, data: Partial<Omit<CoreBelief, "id" | "order">>) {
+  requireFirestore("Firestore write");
+
   await updateDoc(doc(db, CORE_BELIEFS_COLLECTION, id), data);
 }
 
 export async function deleteCoreBelief(id: string) {
+  requireFirestore("Firestore write");
+
   await deleteDoc(doc(db, CORE_BELIEFS_COLLECTION, id));
 }
 
@@ -576,7 +622,7 @@ export async function getVideoSection(): Promise<VideoSection> {
 
 export async function updateVideoSection(data: Partial<VideoSection>) {
   const ref = getVideoSectionRef();
-  if (!ref) return;
+  if (!ref) throw createFirebaseUnavailableError("Firestore write");
 
   await setDoc(ref, { ...data, updatedAt: Date.now() }, { merge: true });
 }
@@ -613,7 +659,7 @@ export async function getMissionSection(): Promise<MissionSection> {
 
 export async function updateMissionSection(data: Partial<MissionSection>) {
   const ref = getMissionRef();
-  if (!ref) return;
+  if (!ref) throw createFirebaseUnavailableError("Firestore write");
 
   await setDoc(ref, { ...data, updatedAt: Date.now() }, { merge: true });
 }
@@ -648,13 +694,15 @@ export async function getRecognitionsSection(): Promise<RecognitionsSection> {
 
 export async function updateRecognitionsSection(data: Partial<RecognitionsSection>) {
   const ref = getRecognitionsRef();
-  if (!ref) return;
+  if (!ref) throw createFirebaseUnavailableError("Firestore write");
 
   await setDoc(ref, { ...data, updatedAt: Date.now() }, { merge: true });
 }
 
 // ============ FOOTER SERVICES (Existing) ============
 export async function getFooterContactInfo(): Promise<ContactInfo | null> {
+  if (!db) return null;
+
   const settingsDoc = await getDoc(doc(db, "settings", "contact_info"));
   if (settingsDoc.exists()) {
     return settingsDoc.data() as ContactInfo;
@@ -671,6 +719,8 @@ export async function getFooterContactInfo(): Promise<ContactInfo | null> {
 }
 
 export async function getFooterSocialPlatforms(): Promise<SocialPlatform[]> {
+  if (!db) return [];
+
   const snap = await getDoc(doc(db, "settings", "footer_socials"));
   if (!snap.exists()) return [];
   const data = snap.data();
@@ -728,7 +778,7 @@ export async function getPathwaysContent(): Promise<PathwaysContent> {
 
 export async function updatePathwaysContent(content: PathwaysContent) {
   const ref = getPathwaysRef();
-  if (!ref) return;
+  if (!ref) throw createFirebaseUnavailableError("Firestore write");
 
   await setDoc(
     ref,
@@ -787,6 +837,10 @@ export function getLocalFaqs(): FAQRecord[] {
 export async function getFaqs(options: GetFaqsOptions = {}): Promise<FAQRecord[]> {
   const { fallbackToLocal = true } = options;
   try {
+    if (!db) {
+      return fallbackToLocal ? getLocalFaqs() : [];
+    }
+
     const q = query(collection(db, FAQS_COLLECTION), orderBy("order", "asc"));
     const snapshot = await getDocs(q);
 
@@ -826,6 +880,8 @@ export async function getFaqs(options: GetFaqsOptions = {}): Promise<FAQRecord[]
 }
 
 export async function createFaq(input: CreateFAQInput): Promise<string> {
+  requireFirestore("Firestore write");
+
   const timestamp = Date.now();
   const safeOrder = Number.isFinite(input.order) ? Math.max(0, Math.trunc(input.order)) : 0;
 
@@ -842,6 +898,8 @@ export async function createFaq(input: CreateFAQInput): Promise<string> {
 }
 
 export async function updateFaq(id: string, input: UpdateFAQInput): Promise<void> {
+  requireFirestore("Firestore write");
+
   const faqRef = doc(db, FAQS_COLLECTION, id);
   const existingFaq = await getDoc(faqRef);
   if (!existingFaq.exists()) {
@@ -867,6 +925,8 @@ export async function updateFaq(id: string, input: UpdateFAQInput): Promise<void
 }
 
 export async function deleteFaq(id: string): Promise<void> {
+  requireFirestore("Firestore write");
+
   await deleteDoc(doc(db, FAQS_COLLECTION, id));
   console.log(`[deleteFaq] Deleted FAQ with ID: ${id}`);
 }

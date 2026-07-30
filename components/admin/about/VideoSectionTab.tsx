@@ -85,6 +85,11 @@ export default function VideoSectionTab() {
   };
 
   const handleThumbnailUpload = async (file: File) => {
+    if (!storage) {
+      setMessage("Firebase Storage is unavailable.");
+      return;
+    }
+
     if (!file.type.startsWith("image/")) {
       setMessage("Please upload a valid image file.");
       return;

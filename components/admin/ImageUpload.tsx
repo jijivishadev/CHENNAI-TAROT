@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { Image as ImageIcon, UploadCloud } from "lucide-react";
 import { uploadStorageFile } from "@/lib/firebaseServices";
+import { storage } from "@/lib/firebase";
 
 type ImageUploadProps = {
   title: string;
@@ -44,6 +45,11 @@ export default function ImageUpload({
 
   const handleSelectFile = async (file: File | null) => {
     if (!file) {
+      return;
+    }
+
+    if (!storage) {
+      setError("Firebase Storage is unavailable in this environment.");
       return;
     }
 
