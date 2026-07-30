@@ -45,17 +45,17 @@ let cachedPathwaysContent: PathwaysContent | null = null;
 let cachedPathwaysContentTime: number = 0;
 
 // ============ DOCUMENT REFERENCES ============
-const SITE_ASSETS_REF = doc(db, "settings", "site_assets");
-const ANNOUNCEMENT_BAR_REF = doc(db, "settings", "announcement_bar");
-const HOME_MESSAGE_REF = doc(db, "pages", "home_message");
-const PATHWAYS_REF = doc(db, "pages", "pathways");
+const getSiteAssetsRef = () => (db ? doc(db, "settings", "site_assets") : null);
+const getAnnouncementBarRef = () => (db ? doc(db, "settings", "announcement_bar") : null);
+const getHomeMessageRef = () => (db ? doc(db, "pages", "home_message") : null);
+const getPathwaysRef = () => (db ? doc(db, "pages", "pathways") : null);
 const OFFERS_COLLECTION = "offers";
-const ABOUT_PAGE_REF = doc(db, "pages", "about");
-const VIDEO_SECTION_REF = doc(db, "pages", "about_video");
-const MISSION_REF = doc(db, "pages", "about_mission");
-const RECOGNITIONS_REF = doc(db, "pages", "about_recognitions");
-const IMAGE_MANAGER_REF = doc(db, "settings", "imageManager");
-const PROMOTIONAL_EVENT_REF = doc(db, "events", "promotional_event");
+const getAboutPageRef = () => (db ? doc(db, "pages", "about") : null);
+const getVideoSectionRef = () => (db ? doc(db, "pages", "about_video") : null);
+const getMissionRef = () => (db ? doc(db, "pages", "about_mission") : null);
+const getRecognitionsRef = () => (db ? doc(db, "pages", "about_recognitions") : null);
+const getImageManagerRef = () => (db ? doc(db, "settings", "imageManager") : null);
+const getPromotionalEventRef = () => (db ? doc(db, "events", "promotional_event") : null);
 
 // ============ COLLECTION REFERENCES ============
 const EARLY_LIFE_COLLECTION = "about_early_life";
@@ -189,7 +189,15 @@ export async function initializeOffersIfEmpty() {
 }
 
 export async function getAnnouncementBarContent(): Promise<AnnouncementBarContent> {
-  const snapshot = await getDoc(ANNOUNCEMENT_BAR_REF);
+  const ref = getAnnouncementBarRef();
+  if (!ref) {
+    return {
+      text: DEFAULT_ANNOUNCEMENT_TEXT,
+      isEnabled: true,
+    };
+  }
+
+  const snapshot = await getDoc(ref);
   if (!snapshot.exists()) {
     return {
       text: DEFAULT_ANNOUNCEMENT_TEXT,
@@ -209,8 +217,11 @@ export async function getAnnouncementBarContent(): Promise<AnnouncementBarConten
 }
 
 export async function updateAnnouncementBarContent(content: Partial<AnnouncementBarContent>) {
+  const ref = getAnnouncementBarRef();
+  if (!ref) return;
+
   await setDoc(
-    ANNOUNCEMENT_BAR_REF,
+    ref,
     {
       ...content,
       updatedAt: Date.now(),
@@ -220,7 +231,10 @@ export async function updateAnnouncementBarContent(content: Partial<Announcement
 }
 
 export async function getHomeMessageContent(): Promise<HomeMessageContent> {
-  const snapshot = await getDoc(HOME_MESSAGE_REF);
+  const ref = getHomeMessageRef();
+  if (!ref) return DEFAULT_HOME_MESSAGE;
+
+  const snapshot = await getDoc(ref);
   if (!snapshot.exists()) {
     return DEFAULT_HOME_MESSAGE;
   }
@@ -238,8 +252,11 @@ export async function getHomeMessageContent(): Promise<HomeMessageContent> {
 }
 
 export async function updateHomeMessageContent(content: Partial<HomeMessageContent>) {
+  const ref = getHomeMessageRef();
+  if (!ref) return;
+
   await setDoc(
-    HOME_MESSAGE_REF,
+    ref,
     {
       ...content,
       updatedAt: Date.now(),
@@ -249,7 +266,10 @@ export async function updateHomeMessageContent(content: Partial<HomeMessageConte
 }
 
 export async function getPromotionalEvent(): Promise<PromotionalEvent | null> {
-  const snapshot = await getDoc(PROMOTIONAL_EVENT_REF);
+  const ref = getPromotionalEventRef();
+  if (!ref) return null;
+
+  const snapshot = await getDoc(ref);
 
   if (!snapshot.exists()) {
     return null;
@@ -267,8 +287,11 @@ export async function getPromotionalEvent(): Promise<PromotionalEvent | null> {
 }
 
 export async function updatePromotionalEvent(content: Partial<Omit<PromotionalEvent, "id">>) {
+  const ref = getPromotionalEventRef();
+  if (!ref) return;
+
   await setDoc(
-    PROMOTIONAL_EVENT_REF,
+    ref,
     {
       ...content,
       updatedAt: Date.now(),
@@ -278,7 +301,10 @@ export async function updatePromotionalEvent(content: Partial<Omit<PromotionalEv
 }
 
 export async function getSiteAssets(): Promise<SiteAssets> {
-  const snapshot = await getDoc(SITE_ASSETS_REF);
+  const ref = getSiteAssetsRef();
+  if (!ref) return {};
+
+  const snapshot = await getDoc(ref);
   if (!snapshot.exists()) {
     return {};
   }
@@ -286,8 +312,11 @@ export async function getSiteAssets(): Promise<SiteAssets> {
 }
 
 export async function saveSiteAssetUrl(field: string, url: string) {
+  const ref = getSiteAssetsRef();
+  if (!ref) return;
+
   await setDoc(
-    SITE_ASSETS_REF,
+    ref,
     {
       [field]: url,
       updatedAt: Date.now(),
@@ -297,8 +326,11 @@ export async function saveSiteAssetUrl(field: string, url: string) {
 }
 
 export async function deleteSiteAssetUrl(field: string) {
+  const ref = getSiteAssetsRef();
+  if (!ref) return;
+
   await setDoc(
-    SITE_ASSETS_REF,
+    ref,
     {
       [field]: deleteField(),
       updatedAt: Date.now(),
@@ -326,7 +358,12 @@ export function normalizeImageManagerSettings(input?: Partial<ImageManagerSettin
 }
 
 export async function getImageManagerSettings(): Promise<ImageManagerSettings> {
-  const snapshot = await getDoc(IMAGE_MANAGER_REF);
+  const ref = getImageManagerRef();
+  if (!ref) {
+    return {};
+  }
+
+  const snapshot = await getDoc(ref);
   if (!snapshot.exists()) {
     return {};
   }
@@ -335,8 +372,11 @@ export async function getImageManagerSettings(): Promise<ImageManagerSettings> {
 }
 
 export async function updateImageManagerSettings(content: Partial<ImageManagerSettings>) {
+  const ref = getImageManagerRef();
+  if (!ref) return;
+
   await setDoc(
-    IMAGE_MANAGER_REF,
+    ref,
     {
       ...content,
       updatedAt: Date.now(),
@@ -390,7 +430,10 @@ export async function uploadSiteAssetFile({ field, storagePath, file, onProgress
 export async function getAboutPageContent(fallback: AboutPageContent): Promise<AboutPageContent> {
   try {
     // Force fresh fetch from pages/about
-    const aboutSnapshot = await getDocFromServer(doc(db, "pages", "about"));
+    const ref = getAboutPageRef();
+    if (!ref) return fallback;
+
+    const aboutSnapshot = await getDocFromServer(ref);
     
     if (!aboutSnapshot.exists()) return fallback;
     
@@ -446,7 +489,10 @@ export async function getAboutPageContent(fallback: AboutPageContent): Promise<A
 }
 
 export async function updateAboutPageContent(content: Partial<AboutPageContent>) {
-  await setDoc(ABOUT_PAGE_REF, { ...content, updatedAt: Date.now() }, { merge: true });
+  const ref = getAboutPageRef();
+  if (!ref) return;
+
+  await setDoc(ref, { ...content, updatedAt: Date.now() }, { merge: true });
 }
 
 // ============ EARLY LIFE CARDS (NEW) ============
@@ -496,7 +542,18 @@ export async function deleteCoreBelief(id: string) {
 }
 
 export async function getVideoSection(): Promise<VideoSection> {
-  const snapshot = await getDoc(VIDEO_SECTION_REF);
+  const ref = getVideoSectionRef();
+  if (!ref) {
+    return {
+      videoUrl: "https://player.vimeo.com/video/1102105273",
+      title: "Global Legacy",
+      description: "A visual testament to transformations that transcend borders.",
+      thumbnailUrl: "",
+      embedCode: "",
+    };
+  }
+
+  const snapshot = await getDoc(ref);
   if (!snapshot.exists()) {
     return {
       videoUrl: "https://player.vimeo.com/video/1102105273",
@@ -518,12 +575,28 @@ export async function getVideoSection(): Promise<VideoSection> {
 }
 
 export async function updateVideoSection(data: Partial<VideoSection>) {
-  await setDoc(VIDEO_SECTION_REF, { ...data, updatedAt: Date.now() }, { merge: true });
+  const ref = getVideoSectionRef();
+  if (!ref) return;
+
+  await setDoc(ref, { ...data, updatedAt: Date.now() }, { merge: true });
 }
 
 // ============ MISSION SECTION (NEW) ============
 export async function getMissionSection(): Promise<MissionSection> {
-  const snapshot = await getDoc(MISSION_REF);
+  const ref = getMissionRef();
+  if (!ref) {
+    return {
+      title: "My Mission Today",
+      items: [
+        "Unlock abundance & financial freedom",
+        "Overcome limiting beliefs",
+        "Heal through intuitive methods",
+        "Harness personal energy"
+      ],
+    };
+  }
+
+  const snapshot = await getDoc(ref);
   if (!snapshot.exists()) {
     return {
       title: "My Mission Today",
@@ -539,12 +612,27 @@ export async function getMissionSection(): Promise<MissionSection> {
 }
 
 export async function updateMissionSection(data: Partial<MissionSection>) {
-  await setDoc(MISSION_REF, { ...data, updatedAt: Date.now() }, { merge: true });
+  const ref = getMissionRef();
+  if (!ref) return;
+
+  await setDoc(ref, { ...data, updatedAt: Date.now() }, { merge: true });
 }
 
 // ============ RECOGNITIONS SECTION (NEW) ============
 export async function getRecognitionsSection(): Promise<RecognitionsSection> {
-  const snapshot = await getDoc(RECOGNITIONS_REF);
+  const ref = getRecognitionsRef();
+  if (!ref) {
+    return {
+      title: "Recognitions",
+      items: [
+        "25+ million INR raised for social causes",
+        "Life Changer Award for coaching",
+        "Distinguished Alumni Award from VIT"
+      ],
+    };
+  }
+
+  const snapshot = await getDoc(ref);
   if (!snapshot.exists()) {
     return {
       title: "Recognitions",
@@ -559,7 +647,10 @@ export async function getRecognitionsSection(): Promise<RecognitionsSection> {
 }
 
 export async function updateRecognitionsSection(data: Partial<RecognitionsSection>) {
-  await setDoc(RECOGNITIONS_REF, { ...data, updatedAt: Date.now() }, { merge: true });
+  const ref = getRecognitionsRef();
+  if (!ref) return;
+
+  await setDoc(ref, { ...data, updatedAt: Date.now() }, { merge: true });
 }
 
 // ============ FOOTER SERVICES (Existing) ============
@@ -587,7 +678,12 @@ export async function getFooterSocialPlatforms(): Promise<SocialPlatform[]> {
 }
 
 export async function getPathwaysContent(): Promise<PathwaysContent> {
-  const snapshot = await getDoc(PATHWAYS_REF);
+  const ref = getPathwaysRef();
+  if (!ref) {
+    return { ...DEFAULT_PATHWAYS_CONTENT };
+  }
+
+  const snapshot = await getDoc(ref);
   if (!snapshot.exists()) {
     return { ...DEFAULT_PATHWAYS_CONTENT };
   }
@@ -631,8 +727,11 @@ export async function getPathwaysContent(): Promise<PathwaysContent> {
 }
 
 export async function updatePathwaysContent(content: PathwaysContent) {
+  const ref = getPathwaysRef();
+  if (!ref) return;
+
   await setDoc(
-    PATHWAYS_REF,
+    ref,
     {
       eyebrow: content.eyebrow,
       heading: content.heading,

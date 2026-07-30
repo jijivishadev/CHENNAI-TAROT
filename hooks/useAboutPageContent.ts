@@ -7,10 +7,28 @@ export function useAboutPageContent(fallback: any) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getAboutPageContent(fallback).then(data => {
-      setContent(data);
-      setLoading(false);
-    });
+    let isMounted = true;
+
+    getAboutPageContent(fallback)
+      .then((data) => {
+        if (isMounted) {
+          setContent(data);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setContent(fallback);
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, []); // Empty array is MUST here
 
   return { content, loading };

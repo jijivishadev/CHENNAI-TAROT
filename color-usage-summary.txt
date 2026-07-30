@@ -1,0 +1,24 @@
+Color usage summary (partial)
+
+Note: A repo-wide grep returned 200 matches (maxResults capped). This file contains a concise summary of where the primary brand colors appear. If you want an exhaustive per-line listing, I can generate a full text file (may require running searches in chunks).
+
+Primary brand colors:
+- Deep Purple: #4B2E83
+  Appears in: components/home/GlobalHeader.tsx, components/shared/Button.tsx, components/shared/BackToTopButton.tsx, components/shared/FloatingActions.tsx, components/testimonials/VideoVault.tsx, components/testimonials/PortraitReviews.tsx, components/shared/EmailCaptureModal.tsx, components/admin/TestimonialsManager.tsx
+
+- Wealth Gold: #D4AF37
+  Appears in (sample): app/(admin)/admin/login/page.tsx, components/admin/AdminSidebar.tsx, components/testimonials/VideoVault.tsx, components/testimonials/PortraitReviews.tsx, app/globals.css, components/shared/GradientCard.tsx, components/shared/DynamicFooter.tsx, components/shared/Button.tsx, components/shared/BackToTopButton.tsx, app/(app)/testimonials/page.tsx, app/(app)/terms/page.tsx, app/(app)/privacy-policy/page.tsx, src/content/hero.ts, components/shared/FaqItem.tsx, components/shared/EmailCaptureModal.tsx, components/admin/TestimonialsManager.tsx, components/admin/ImageUpload.tsx, components/admin/EventsManager.tsx
+
+- Soft Lavender: #F3ECFF
+  Appears in: app/(admin)/admin/login/page.tsx, components/home/GlobalHeader.tsx, components/shared/GradientCard.tsx, components/shared/DynamicFooter.tsx, components/shared/FloatingActions.tsx, components/shared/BackToTopButton.tsx, components/shared/EmailCaptureModal.tsx
+
+- Charcoal / Text: #333333
+  Appears in: (used across site text/colors in globals and components)
+
+Other notable colors observed:
+- #1A0B2E (deep navy) — admin sidebar, cards, backgrounds
+- #FDFBFF (near-white) — card backgrounds and forms
+
+How to proceed:
+- I can create a full exhaustive report listing every match (file path, line number, matched snippet). This will require rerunning the search in chunks to avoid the 200-result cap. Reply "full report" and I'll generate it into `color-usage-full.txt`.
+- Or tell me if you want the report limited to specific colors or directories.

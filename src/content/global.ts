@@ -1,9 +1,9 @@
 export const globalContent = {
   logoUrl: "/milliondollarscoach_logo.jpeg",
   brandName: "CHENNAI TAROT",
-  email: "multi@chennaitarot.com",
+  email: "multi@milliondollarscoach.com",
   phone: "+1 8723473332",
-  footerEmail: "multi@chennaitarot.com",
+  footerEmail: "multi@milliondollarscoach.com",
     footerPhone: "+1 8723473332",
   headerNavLinks: [
     { label: "Home", href: "/" },
@@ -23,7 +23,7 @@ export const globalContent = {
     exploreLabel: "EXPLORE",
     contactLabel: "CONTACT",
     legalLabel: "LEGAL",
-    copyright: "© 2026 Chennai Tarot · Jothi Ramesh. All rights reserved.",
+    copyright: "© 2026 Psychic India · Jothi Ramesh. All rights reserved.",
     exploreLinks: [
       { label: "Home", href: "/" },
       { label: "About", href: "/about" },
