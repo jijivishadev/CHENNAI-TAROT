@@ -12,6 +12,12 @@ export default function AnnouncementBar() {
   const [isEnabled, setIsEnabled] = useState(true);
 
   useEffect(() => {
+    if (!db) {
+      setText(fallbackText);
+      setIsEnabled(true);
+      return;
+    }
+
     const announcementRef = doc(db, "settings", "announcement_bar");
     const unsubscribe = onSnapshot(
       announcementRef,

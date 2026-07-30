@@ -39,6 +39,12 @@ export default function DynamicFooter() {
   const [socialPlatforms, setSocialPlatforms] = useState<SocialPlatform[]>([]);
 
   useEffect(() => {
+    if (!db) {
+      setContactInfo(null);
+      setSocialPlatforms([]);
+      return;
+    }
+
     getFooterContactInfo()
       .then((contact) => {
         setContactInfo(contact);
