@@ -122,3 +122,27 @@ export interface TestimonialReview {
   portraitAlt: string;
   quote: string;
 }
+
+// ============ BLOG TYPES ============
+export interface BlogPost {
+  id: string;
+  title: string;
+  publishedAt: string;
+  tags: string[];
+  excerpt: string;
+  imageUrl: string;
+  imageAlt: string;
+  readTime?: string;
+  author?: string;
+  content?: string;
+  richContent?: string;
+  // contentBlocks?: {
+  //   id: string;
+  //   type: "heading" | "subheading" | "content" | "quote";
+  //   content: string;
+  // }[];
+  contentSections?: {
+    heading: string;
+    paragraphs: string[];
+  }[];
+}
