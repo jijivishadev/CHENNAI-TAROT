@@ -791,7 +791,316 @@ export async function updatePathwaysContent(content: PathwaysContent) {
     { merge: true }
   );
 }
+// ============ BLOG SERVICES (NEW) ============
+const BLOG_POSTS_COLLECTION = "blogs";
 
+export interface BlogPostRecord {
+  id: string;
+  title: string;
+  slug: string;
+  shortDescription: string;
+  excerpt: string;
+  imageUrl: string;
+  imageAlt: string;
+  keywords: string[];
+  tags: string[];
+  author?: string;
+  readTime?: string;
+  publishedAt: string;
+  createdAt: number;
+  updatedAt: number;
+  richContent: string;
+}
+
+export type CreateBlogPostInput = {
+  title: string;
+  shortDescription: string;
+  keywords: string[];
+  richContent: string;
+  imageUrl?: string;
+  imageFile?: File | null;
+  author?: string;
+  readTime?: string;
+  onImageUploadProgress?: (value: number) => void;
+};
+
+export type UpdateBlogPostInput = {
+  title: string;
+  shortDescription: string;
+  keywords: string[];
+  richContent: string;
+  imageUrl?: string;
+  imageFile?: File | null;
+  author?: string;
+  readTime?: string;
+  onImageUploadProgress?: (value: number) => void;
+};
+
+function slugifyBlogTitle(value: string) {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function formatPublishedDate(timestamp: number) {
+  return new Date(timestamp).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function toUnixMs(value: unknown, fallback: number) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (value && typeof value === "object" && "seconds" in (value as Record<string, unknown>) && typeof (value as Record<string, unknown>).seconds === "number") {
+    return ((value as Record<string, unknown>).seconds as number) * 1000;
+  }
+  return fallback;
+}
+
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function convertLegacyBlocksToHtml(blocks: { type: string; content: string }[]): string {
+  let html = "";
+  for (const block of blocks) {
+    const content = block.content.trim();
+    if (!content) continue;
+
+    switch (block.type) {
+      case "heading":
+        html += `<h2 class="text-2xl font-bold text-[#D4AF37] mt-8 mb-4">${escapeHtml(content)}</h2>`;
+        break;
+      case "subheading":
+        html += `<h3 class="text-xl font-semibold text-[#4B2E83] mt-6 mb-3">${escapeHtml(content)}</h3>`;
+        break;
+      case "quote":
+        html += `<blockquote class="border-l-4 border-[#D4AF37] bg-[#4B2E83]/10 px-4 py-3 my-4 text-lg italic">${escapeHtml(content)}</blockquote>`;
+        break;
+      default:
+        html += `<p class="mb-4 text-lg leading-relaxed">${escapeHtml(content)}</p>`;
+    }
+  }
+
+  return html || "<p>No content available.</p>";
+}
+
+function convertLegacySectionsToHtml(sections: { heading: string; paragraphs: string[] }[]): string {
+  let html = "";
+  for (const section of sections) {
+    html += `<h2 class="text-2xl font-bold text-[#D4AF37] mt-8 mb-4">${escapeHtml(section.heading)}</h2>`;
+    for (const paragraph of section.paragraphs) {
+      html += `<p class="mb-4 text-lg leading-relaxed">${escapeHtml(paragraph)}</p>`;
+    }
+  }
+
+  return html || "<p>No content available.</p>";
+}
+
+function mapBlogDoc(id: string, data: Record<string, unknown>): BlogPostRecord {
+  const now = Date.now();
+  const createdAt = toUnixMs(data.createdAt, now);
+  const updatedAt = toUnixMs(data.updatedAt, createdAt);
+  const title = typeof data.title === "string" ? data.title.trim() : "Untitled Blog";
+
+  const shortDescription =
+    typeof data.shortDescription === "string"
+      ? data.shortDescription.trim()
+      : typeof data.excerpt === "string"
+        ? data.excerpt.trim()
+        : "";
+
+  const keywords = Array.isArray(data.keywords)
+    ? data.keywords.filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+    : [];
+
+  const tags = Array.isArray(data.tags)
+    ? data.tags.filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+    : keywords;
+
+  let richContent = "";
+  if (typeof data.richContent === "string" && data.richContent.trim().length > 0) {
+    richContent = data.richContent.trim();
+  } else {
+    const legacyBlocks = Array.isArray(data.contentBlocks) ? data.contentBlocks : [];
+    const legacySections = Array.isArray(data.contentSections) ? data.contentSections : [];
+
+    if (legacyBlocks.length > 0) {
+      richContent = convertLegacyBlocksToHtml(legacyBlocks as { type: string; content: string }[]);
+    } else if (legacySections.length > 0) {
+      richContent = convertLegacySectionsToHtml(legacySections as { heading: string; paragraphs: string[] }[]);
+    } else {
+      richContent = `<p>${shortDescription || "No content available."}</p>`;
+    }
+  }
+
+  return {
+    id,
+    title,
+    slug:
+      typeof data.slug === "string" && data.slug.trim()
+        ? data.slug.trim()
+        : slugifyBlogTitle(title) || id,
+    shortDescription,
+    excerpt:
+      typeof data.excerpt === "string" && data.excerpt.trim()
+        ? data.excerpt.trim()
+        : shortDescription,
+    imageUrl: typeof data.imageUrl === "string" ? data.imageUrl.trim() : "",
+    imageAlt:
+      typeof data.imageAlt === "string" && data.imageAlt.trim()
+        ? data.imageAlt.trim()
+        : title,
+    keywords,
+    tags,
+    author: typeof data.author === "string" ? data.author.trim() : undefined,
+    readTime: typeof data.readTime === "string" ? data.readTime.trim() : undefined,
+    publishedAt:
+      typeof data.publishedAt === "string" && data.publishedAt.trim()
+        ? data.publishedAt.trim()
+        : formatPublishedDate(createdAt),
+    createdAt,
+    updatedAt,
+    richContent,
+  };
+}
+
+export async function uploadBlogImage(file: File, slug: string, onProgress?: (value: number) => void) {
+  requireStorage();
+
+  const safeFileName = file.name.replace(/\s+/g, "-");
+  const storageRef = ref(storage, `blogs/${slug}/${Date.now()}-${safeFileName}`);
+  const uploadTask = uploadBytesResumable(storageRef, file);
+
+  const downloadUrl = await new Promise<string>((resolve, reject) => {
+    uploadTask.on(
+      "state_changed",
+      (snapshot) => {
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        onProgress?.(progress);
+      },
+      (error) => reject(error),
+      async () => {
+        try {
+          const url = await getDownloadURL(uploadTask.snapshot.ref);
+          resolve(url);
+        } catch (error) {
+          reject(error);
+        }
+      }
+    );
+  });
+
+  return downloadUrl;
+}
+
+export async function getBlogPosts(): Promise<BlogPostRecord[]> {
+  if (!db) return [];
+
+  try {
+    const snapshot = await getDocs(collection(db, BLOG_POSTS_COLLECTION));
+    const posts = snapshot.docs
+      .map((item) => mapBlogDoc(item.id, item.data() as Record<string, unknown>))
+      .sort((a, b) => b.createdAt - a.createdAt);
+
+    console.log(`[getBlogPosts] fetched ${posts.length} posts`);
+    return posts;
+  } catch (error) {
+    console.error("[getBlogPosts] failed:", error);
+    throw error;
+  }
+}
+
+export async function createBlogPost(input: CreateBlogPostInput) {
+  requireFirestore("Firestore write");
+
+  const timestamp = Date.now();
+  const title = input.title.trim();
+  const slug = slugifyBlogTitle(title) || `blog-${timestamp}`;
+  const shortDescription = input.shortDescription.trim();
+  const keywords = input.keywords.map((keyword) => keyword.trim()).filter((keyword) => keyword.length > 0);
+
+  let finalImageUrl = input.imageUrl?.trim() || "";
+  if (input.imageFile) {
+    finalImageUrl = await uploadBlogImage(input.imageFile, slug, input.onImageUploadProgress);
+  }
+
+  const richContent = input.richContent.trim() || "<p>No content provided.</p>";
+
+  await addDoc(collection(db, BLOG_POSTS_COLLECTION), {
+    title,
+    slug,
+    shortDescription,
+    excerpt: shortDescription,
+    imageUrl: finalImageUrl,
+    imageAlt: title,
+    keywords,
+    tags: keywords,
+    author: input.author?.trim() || "",
+    readTime: input.readTime?.trim() || "",
+    richContent,
+    publishedAt: formatPublishedDate(timestamp),
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  });
+}
+
+export async function updateBlogPost(id: string, input: UpdateBlogPostInput) {
+  requireFirestore("Firestore write");
+
+  const existingDoc = await getDoc(doc(db, BLOG_POSTS_COLLECTION, id));
+  const existingData = existingDoc.exists() ? (existingDoc.data() as Record<string, unknown>) : {};
+
+  const fallbackTitle = typeof existingData.title === "string" ? existingData.title : "";
+  const title = input.title.trim() || fallbackTitle;
+  const fallbackSlug = typeof existingData.slug === "string" ? existingData.slug : "";
+  const slug = fallbackSlug || slugifyBlogTitle(title) || `blog-${Date.now()}`;
+  const shortDescription = input.shortDescription.trim();
+  const keywords = input.keywords.map((keyword) => keyword.trim()).filter((keyword) => keyword.length > 0);
+
+  let finalImageUrl = input.imageUrl?.trim() || "";
+  if (input.imageFile) {
+    finalImageUrl = await uploadBlogImage(input.imageFile, slug, input.onImageUploadProgress);
+  }
+  if (!finalImageUrl && typeof existingData.imageUrl === "string") {
+    finalImageUrl = existingData.imageUrl.trim();
+  }
+
+  const richContent = input.richContent.trim() || "<p>No content provided.</p>";
+
+  await setDoc(
+    doc(db, BLOG_POSTS_COLLECTION, id),
+    {
+      title,
+      slug,
+      shortDescription,
+      excerpt: shortDescription,
+      imageUrl: finalImageUrl,
+      imageAlt: title,
+      keywords,
+      tags: keywords,
+      author: input.author?.trim() || "",
+      readTime: input.readTime?.trim() || "",
+      richContent,
+      updatedAt: Date.now(),
+    },
+    { merge: true }
+  );
+}
+
+export async function deleteBlogPost(id: string) {
+  requireFirestore("Firestore write");
+
+  await deleteDoc(doc(db, BLOG_POSTS_COLLECTION, id));
+}
 // ============ FAQ SERVICES (NEW) ============
 const FAQS_COLLECTION = "faqs";
 

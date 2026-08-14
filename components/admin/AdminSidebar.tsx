@@ -14,6 +14,7 @@ import {
   Contact,
   HelpCircle,
   FileText,
+  PenSquare,
 } from "lucide-react";
 import { auth } from "@/lib/firebase";
 
@@ -26,6 +27,7 @@ const sidebarLinks = [
   { label: "Pathways", href: "/admin/pathways", icon: Boxes },
   { label: "Testimonials", href: "/admin/testimonials", icon: Award },
   { label: "Contact Hub", href: "/admin/contact-hub", icon: Contact },
+  { label: "Blog Builder", href: "/admin/blog-builder", icon: PenSquare },
   { label: "FAQs", href: "/admin/faqs", icon: HelpCircle },
   { label: "Survey", href: "/admin/survey", icon: FileText },
 ];
